@@ -128,7 +128,7 @@ function Board() {
         items-center
         overflow-x-auto
         overflow-y-hidden
-        px-[40px]
+        p-4
     "
     >
       <DndContext
@@ -138,7 +138,7 @@ function Board() {
         onDragOver={onDragOver}
       >
         <div className="m-auto flex gap-4">
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <SortableContext items={columnsId}>
               {columns.map((col) => (
                 <ColumnContainer
@@ -160,8 +160,8 @@ function Board() {
             }}
             className="
       h-[60px]
-      w-[350px]
-      min-w-[350px]
+      w-[320px]
+      min-w-[320px]
       cursor-pointer
       rounded-lg
       bg-mainBackgroundColor

@@ -15,6 +15,7 @@ import {
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import TaskCard from "./TaskCard";
+import useLocalStorage from "../hooks/useLocalStorage";
 
 const defaultCols: Column[] = [
   {
@@ -101,10 +102,19 @@ const defaultTasks: Task[] = [
 ];
 
 function Board() {
-  const [columns, setColumns] = useState<Column[]>(defaultCols);
+  const [defaultLCColumns, setDefaultLCColumns] = useLocalStorage(
+    "columns",
+    defaultCols
+  );
+  const [defaultLCTasks, setDefaultLCTasks] = useLocalStorage(
+    "tasks",
+    defaultTasks
+  );
+
+  const [columns, setColumns] = useState<Column[]>(defaultLCColumns);
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
-  const [tasks, setTasks] = useState<Task[]>(defaultTasks);
+  const [tasks, setTasks] = useState<Task[]>(defaultLCTasks);
 
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
 
@@ -216,11 +226,13 @@ function Board() {
     };
 
     setTasks([...tasks, newTask]);
+    setDefaultLCTasks([...tasks, newTask]);
   }
 
   function deleteTask(id: Id) {
     const newTasks = tasks.filter((task) => task.id !== id);
     setTasks(newTasks);
+    setDefaultLCTasks(newTasks);
   }
 
   function updateTask(id: Id, content: string) {
@@ -230,6 +242,7 @@ function Board() {
     });
 
     setTasks(newTasks);
+    setDefaultLCTasks(newTasks);
   }
 
   function createNewColumn() {
@@ -239,14 +252,17 @@ function Board() {
     };
 
     setColumns([...columns, columnToAdd]);
+    setDefaultLCColumns([...columns, columnToAdd]);
   }
 
   function deleteColumn(id: Id) {
     const filteredColumns = columns.filter((col) => col.id !== id);
     setColumns(filteredColumns);
+    setDefaultLCColumns(filteredColumns);
 
     const newTasks = tasks.filter((t) => t.columnId !== id);
     setTasks(newTasks);
+    setDefaultLCTasks(newTasks);
   }
 
   function updateColumn(id: Id, title: string) {
@@ -256,6 +272,7 @@ function Board() {
     });
 
     setColumns(newColumns);
+    setDefaultLCColumns(newColumns);
   }
 
   function onDragStart(event: DragStartEvent) {
@@ -292,7 +309,9 @@ function Board() {
 
       const overColumnIndex = columns.findIndex((col) => col.id === overId);
 
-      return arrayMove(columns, activeColumnIndex, overColumnIndex);
+      const res = arrayMove(columns, activeColumnIndex, overColumnIndex);
+      setDefaultLCColumns(res);
+      return res;
     });
   }
 
@@ -319,10 +338,13 @@ function Board() {
         if (tasks[activeIndex].columnId != tasks[overIndex].columnId) {
           // Fix introduced after video recording
           tasks[activeIndex].columnId = tasks[overIndex].columnId;
-          return arrayMove(tasks, activeIndex, overIndex - 1);
+          const res = arrayMove(tasks, activeIndex, overIndex - 1);
+          setDefaultLCTasks(res);
+          return res;
         }
-
-        return arrayMove(tasks, activeIndex, overIndex);
+        const res = arrayMove(tasks, activeIndex, overIndex);
+        setDefaultLCTasks(res);
+        return res;
       });
     }
 
@@ -335,7 +357,9 @@ function Board() {
 
         tasks[activeIndex].columnId = overId;
         console.log("DROPPING TASK OVER COLUMN", { activeIndex });
-        return arrayMove(tasks, activeIndex, activeIndex);
+        const res = arrayMove(tasks, activeIndex, activeIndex);
+        setDefaultLCTasks(res);
+        return res;
       });
     }
   }
